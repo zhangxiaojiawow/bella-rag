@@ -1,6 +1,7 @@
 from app.schema.index import ChunkVectorIndex, QuestionVectorIndex
 from app.schema.index import EsIndex
-from init.settings import OPENAPI, VECTOR_DB_COMMON
+from init.settings import OPENAPI, VECTOR_DB_COMMON, RETRIEVAL
+from bella_rag.llm.api_call_mode import BILLING_TRANSFER_MODE
 from bella_rag.llm.openapi import OpenAPIEmbedding
 
 ak = OPENAPI["AK"]
@@ -14,6 +15,16 @@ question_vector_index_structure = QuestionVectorIndex()
 embed_model = OpenAPIEmbedding(
     model=VECTOR_DB_COMMON.get("EMBEDDING_MODEL"),
     embedding_batch_size=VECTOR_DB_COMMON["EMBEDDING_BATCH_SIZE"],
+    api_key=OPENAPI["BILLING_TRANSFER_API_KEY"],
+    model_dimension=int(VECTOR_DB_COMMON["DIMENSION"]),
+    call_mode=BILLING_TRANSFER_MODE,
+    service_client=OPENAPI["BILLING_TRANSFER_SERVICE_CLIENT"],
+)
+
+retrieval_embed_model = OpenAPIEmbedding(
+    model=VECTOR_DB_COMMON.get("EMBEDDING_MODEL"),
+    embedding_batch_size=VECTOR_DB_COMMON["EMBEDDING_BATCH_SIZE"],
     api_key=ak,
-    model_dimension=int(VECTOR_DB_COMMON["DIMENSION"])
+    model_dimension=int(VECTOR_DB_COMMON["DIMENSION"]),
+    timeout=RETRIEVAL["EMBEDDING_TIMEOUT"]
 )

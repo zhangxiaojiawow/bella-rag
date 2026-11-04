@@ -446,8 +446,13 @@ CACHES = {
 
 # OpenAPI配置 - 必需
 OPENAPI = {
+    # 直接调用模式：使用服务自身的 API Key，不附加计费转移 Header。
     'URL': config.get_required('OPENAPI', 'api_base'),
     'AK': config.get_required('OPENAPI', 'ak'),
+    # 计费转移模式：使用专用 API Key，并附加 X-Service-Client 与
+    # X-Effective-Api-Key-Code。后者在请求时从 UserContext.usage_ak_code 获取。
+    'BILLING_TRANSFER_API_KEY': config.get('OPENAPI', 'billing_transfer_api_key', ''),
+    'BILLING_TRANSFER_SERVICE_CLIENT': config.get('OPENAPI', 'billing_transfer_service_client', ''),
 }
 
 # 向量数据库配置 - 支持多种类型
@@ -534,12 +539,15 @@ KAFKA = {
     'FILE_API_TASK_BOOTSTRAP_SERVERS': config.get('KAFKA', 'file_api_bootstrap_servers', ''),
     'FILE_API_TASK_TOPIC': config.get('KAFKA', 'file_api_topic', ''),
     'FILE_API_TASK_GROUP_ID': config.get('KAFKA', 'file_api_group_id', ''),
-
     'KNOWLEDGE_FILE_CONTEXT_TASK_GROUP_ID': config.get('KAFKA', 'knowledge_file_index_context_group_id', ''),
 
     'KNOWLEDGE_FILE_DELETE_BOOTSTRAP_SERVERS': config.get('KAFKA', 'knowledge_file_delete_bootstrap_servers', ''),
     'KNOWLEDGE_FILE_DELETE_TOPIC': config.get('KAFKA', 'knowledge_file_delete_topic', ''),
     'KNOWLEDGE_FILE_DELETE_GROUP_ID': config.get('KAFKA', 'knowledge_file_delete_group_id', ''),
+
+    # 向量索引重建期间暂停受影响监听器的开关；false 时声明了
+    # consume_switch_key 的监听器在启动时不会被创建。默认 true 保持现状。
+    'VECTOR_INDEX_CONSUME_ENABLED': config.get('KAFKA', 'vector_index_consume_enabled', True, bool),
 }
 
 # 重排序配置
@@ -556,10 +564,12 @@ RETRIEVAL = {
     'TOKEN_THRESHOLD': config.get('RETRIEVAL', 'complete_token_threshold', 0.6, float),
     'COMPLETE_MAX_TOKEN': config.get('RETRIEVAL', 'complete_max_token', 1500, int),
     'MATCH_SCORE': config.get('RETRIEVAL', 'match_score', 0.95, float),
+    'EMBEDDING_TIMEOUT': config.get('RETRIEVAL', 'embedding_timeout', 5.0, float),
 }
 
 # 上下文总结配置
 CONTEXT_SUMMARY = {
+    'ENABLE': config.get('CONTEXT_SUMMARY', 'enable', True, bool),
     'SPILT_MAX_LENGTH': config.get('CONTEXT_SUMMARY', 'spilt_max_length', 1500, int),
     'MAX_BACKGROUND_LENGTH': config.get('CONTEXT_SUMMARY', 'max_background_length', 20000, int),
     'OVERLAP_LENGTH': config.get('CONTEXT_SUMMARY', 'overlap_length', 2000, int),
@@ -571,7 +581,9 @@ CONTEXT_SUMMARY = {
 
 # file-api配置
 FILE_API = {
-    'url': config.get('FILE_API', 'url', '')
+    'url': config.get('FILE_API', 'url', ''),
+    # 默认保留文件摘要链路；需要临时关闭时可通过 FILE_API_ENABLE_SUMMARY=false 覆盖。
+    'enable_summary': config.get('FILE_API', 'enable_summary', True, bool),
 }
 
 DOCUMENT_PARSE = {
